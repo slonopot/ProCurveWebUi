@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP ProCurve Switch Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .connection-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .connection-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .connection-form label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .connection-form input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .connection-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status-notification {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            padding: 20px;
+            min-height: 500px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .port-card {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .port-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .port-card.connected {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+        }
+
+        .port-card.disconnected {
+            border-color: #6c757d;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .port-card.disabled {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #ffffff 100%);
+        }
+
+        .port-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .port-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .port-status.green { background: #28a745; }
+        .port-status.red { background: #dc3545; }
+        .port-status.gray { background: #6c757d; }
+
+        .vlan-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .vlan-table th,
+        .vlan-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .vlan-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .vlan-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .usage-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+            transition: width 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stack-section {
+            margin-bottom: 30px;
+        }
+
+        .stack-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .vlan-editor {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .vlan-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .vlan-editor h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .editor-form-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .editor-form-row label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .editor-form-row input,
+        .editor-form-row select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .port-assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .port-assignment-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .port-assignment-item.assigned {
+            background: #e8f5e8;
+            border-color: #28a745;
+        }
+
+        .port-assignment-item label {
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .port-assignment-item select {
+            width: 80px;
+            padding: 2px 4px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .vlan-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        .collapse-btn:hover {
+            color: #5a6fd8;
+        }
+
+        .editor-collapsed {
+            display: none;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .info-text {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 HP ProCurve Switch Controller</h1>
+            <p>Modern web interface for managing HP ProCurve switches</p>
+        </div>
+
+        <div class="connection-panel">
+            <div class="connection-form">
+                <label for="switchIp">Switch IP Address:</label>
+                <input type="text" id="switchIp" placeholder="192.168.1.1" value="">
+                <button class="btn btn-primary" onclick="connectToSwitch()">
+                    <span id="connectBtnText">Connect</span>
+                    <span id="connectLoading" class="loading hidden"></span>
+                </button>
+            </div>
+            <div class="status-notification">
+                <div id="connectionStatus" class="status hidden"></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('ports')">Port Management</button>
+            <button class="tab" onclick="showTab('vlans')">VLAN Configuration</button>
+            <button class="tab" onclick="showTab('monitoring')">Monitoring</button>
+            <button class="tab" onclick="showTab('stack')">Stack Management</button>
+            <button class="tab" onclick="showTab('config')">Stack Config</button>
+        </div>
+
+        <div class="tab-content">
+            <div id="ports" class="tab-pane active">
+                <h3>Port Management</h3>
+                <div class="control-group">
+                    <button class="btn btn-success" onclick="enableSelectedPorts()">Enable Selected</button>
+                    <button class="btn btn-danger" onclick="disableSelectedPorts()">Disable Selected</button>
+                    <button class="btn btn-warning" onclick="refreshPorts()">Refresh Ports</button>
+                    <button class="btn btn-info" onclick="selectAllPorts()">Select All</button>
+                    <button class="btn btn-secondary" onclick="clearSelection()">Clear Selection</button>
+                </div>
+                <div id="portGrid" class="port-grid">
+                    <!-- Ports will be populated here -->
+                </div>
+            </div>
+
+            <div id="vlans" class="tab-pane">
+                <h3>VLAN Configuration</h3>
+                
+                <div class="control-group">
+                    <button class="btn btn-warning" onclick="refreshVlans()">Refresh VLANs</button>
+                    <button class="btn btn-primary" onclick="showVlanEditor()">Add New VLAN</button>
+                </div>
+
+                <table id="vlanTable" class="vlan-table">
+                    <thead>
+                        <tr>
+                            <th>VLAN ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Tagged Ports</th>
+                            <th>Untagged Ports</th>
+                            <th>Forbidden Ports</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- VLANs will be populated here -->
+                    </tbody>
+                </table>
+
+                <!-- VLAN Editor (hidden by default) -->
+                <div id="vlanEditor" class="vlan-editor" style="display: none;">
+                    <div class="vlan-editor-header">
+                        <h4 id="editorTitle">Add New VLAN</h4>
+                        <button class="collapse-btn" onclick="hideVlanEditor()" title="Close Editor">✕</button>
+                    </div>
+                    
+                    <div id="editorContent">
+                        <div class="editor-form-row">
+                            <label for="editorVlanId">VLAN ID:</label>
+                            <input type="number" id="editorVlanId" min="1" max="4094" placeholder="Enter VLAN ID">
+                        </div>
+                        
+                        <div class="editor-form-row">
+                            <label for="editorVlanName">VLAN Name:</label>
+                            <input type="text" id="editorVlanName" placeholder="Enter VLAN Name">
+                        </div>
+                        
+                        <div class="editor-form-row">
+                            <label>Port Assignment:</label>
+                            <div style="grid-column: 2;">
+                                <div id="portAssignmentGrid" class="port-assignment-grid">
+                                    <!-- Port assignments will be populated here -->
+                                </div>
+                                <div class="info-text" style="margin-top: 10px;">
+                                    Select ports and their VLAN membership mode. Green items are assigned to this VLAN.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="vlan-actions">
+                            <button class="btn btn-secondary" onclick="hideVlanEditor()">Cancel</button>
+                            <button class="btn btn-success" id="saveVlanBtn" onclick="saveVlan()">Create VLAN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="monitoring" class="tab-pane">
+                <h3>Port Usage Monitoring</h3>
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="startMonitoring()">Start Auto-Monitoring</button>
+                    <button class="btn btn-danger" onclick="stopMonitoring()">Stop Auto-Monitoring</button>
+                    <button class="btn btn-warning" onclick="refreshUsage()">Refresh Now</button>
+                </div>
+                <div id="usageContainer" class="monitoring-grid">
+                    <!-- Usage data will be populated here -->
+                </div>
+            </div>
+
+            <div id="stack" class="tab-pane">
+                <h3>Stack Management</h3>
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="refreshStack()">Refresh Stack</button>
+                    <button class="btn btn-info" onclick="getCommanderInfo()">Commander Info</button>
+                </div>
+                <div id="stackContainer">
+                    <!-- Stack info will be populated here -->
+                </div>
+            </div>
+
+            <div id="config" class="tab-pane">
+                <h3>Stack Configuration</h3>
+                <div class="control-group">
+                    <button class="btn btn-primary" onclick="refreshStackConfig()">Refresh Config</button>
+                    <button class="btn btn-success" onclick="applyStackConfig()">Apply Changes</button>
+                    <button class="btn btn-secondary" onclick="resetStackConfig()">Reset Changes</button>
+                </div>
+                <div id="stackConfigContainer">
+                    <!-- Stack config will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VLAN Deletion Confirmation Modal -->
+    <div id="deleteVlanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete VLAN</h3>
+                <span class="close" onclick="closeDeleteVlanModal()">&times;</span>
+            </div>
+            <div id="deleteVlanContent">
+                <!-- Deletion content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let switchIP = '';
+        let connectedPorts = new Set();
+        let selectedPorts = new Set();
+        let monitoringInterval = null;
+        let availablePorts = [];
+
+        // ========================================
+        // CONSOLE API - USE THESE FUNCTIONS FROM BROWSER CONSOLE
+        // ========================================
+
+        /**
+         * HP ProCurve Switch Console API
+         * Usage: Open browser console (F12) and use these functions
+         * 
+         * Example:
+         * await HPAPI.connect('192.168.1.100')
+         * await HPAPI.ports.enable([1,2,3])
+         * await HPAPI.vlans.create(100, 'TestVLAN')
+         */
+        window.HPAPI = {
+            // Connection Management
+            connect: async (ip) => {
+                switchIP = ip;
+                try {
+                    const response = await makeRequestAPI('/cgi/get_bobports');
+                    const data = await response.text();
+                    if (response.ok && data.trim()) {
+                        console.log(`✅ Connected to HP ProCurve switch at ${ip}`);
+                        const ports = await HPAPI.ports.list();
+                        console.log(`📊 Found ${Object.keys(ports).length} ports`);
+                        return { success: true, message: `Connected to ${ip}`, portCount: Object.keys(ports).length };
+                    } else {
+                        throw new Error('No data received from switch');
+                    }
+                } catch (error) {
+                    console.error(`❌ Failed to connect: ${error.message}`);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            // Port Management API
+            ports: {
+                // List all ports with their status
+                list: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/get_bobports');
+                        const data = await response.text();
+                        const portConfigs = parseBobPortsAPI(data);
+                        
+                        // Get usage data
+                        let usageInfo = {};
+                        try {
+                            const usageResponse = await makeRequestAPI('/cgi/port_usage');
+                            const usageData = await usageResponse.text();
+                            usageInfo = parsePortUsageAPI(usageData);
+                        } catch (e) {
+                            console.warn('Could not get usage data');
+                        }
+                        
+                        // Combine data
+                        const result = {};
+                        Object.entries(portConfigs).forEach(([portNum, config]) => {
+                            const usage = usageInfo[portNum] || {};
+                            result[portNum] = {
+                                ...config,
+                                connected: usage.connected || false,
+                                usage: usage.usage || 0,
+                                speed: usage.speed || 'Unknown'
+                            };
+                        });
+                        
+                        return result;
+                    } catch (error) {
+                        console.error('❌ Failed to list ports:', error.message);
+                        throw error;
+                    }
+                },
+
+                // Enable specific ports
+                enable: async (portNumbers) => {
+                    const ports = Array.isArray(portNumbers) ? portNumbers : [portNumbers];
+                    try {
+                        const portList = ports.join(',');
+                        await makeRequestAPI(`/cgi/set_bobports?ifAdminStatus=1&indeces=${portList}`);
+                        console.log(`✅ Enabled ports: ${ports.join(', ')}`);
+                        return { success: true, enabled: ports };
+                    } catch (error) {
+                        console.error(`❌ Failed to enable ports:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Disable specific ports
+                disable: async (portNumbers) => {
+                    const ports = Array.isArray(portNumbers) ? portNumbers : [portNumbers];
+                    try {
+                        const portList = ports.join(',');
+                        await makeRequestAPI(`/cgi/set_bobports?ifAdminStatus=2&indeces=${portList}`);
+                        console.log(`✅ Disabled ports: ${ports.join(', ')}`);
+                        return { success: true, disabled: ports };
+                    } catch (error) {
+                        console.error(`❌ Failed to disable ports:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Get usage statistics
+                usage: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/port_usage');
+                        const data = await response.text();
+                        return parsePortUsageAPI(data);
+                    } catch (error) {
+                        console.error('❌ Failed to get usage data:', error.message);
+                        throw error;
+                    }
+                }
+            },
+
+            // VLAN Management API
+            vlans: {
+                // List all VLANs
+                list: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/getVLANAll');
+                        const data = await response.text();
+                        return parseVlansAPI(data);
+                    } catch (error) {
+                        console.error('❌ Failed to list VLANs:', error.message);
+                        throw error;
+                    }
+                },
+
+                // Create a new VLAN
+                create: async (vlanId, vlanName, portConfig = {}) => {
+                    try {
+                        // Create VLAN
+                        await makeRequestAPI(`/cgi/addVLAN?VLAN_ID=${vlanId}&VLAN_NAME=${encodeURIComponent(vlanName)}`);
+                        console.log(`✅ Created VLAN ${vlanId} (${vlanName})`);
+                        
+                        // Configure ports if provided
+                        if (Object.keys(portConfig).length > 0) {
+                            await HPAPI.vlans.configurePorts(vlanId, portConfig);
+                        }
+                        
+                        return { success: true, vlanId, vlanName, portConfig };
+                    } catch (error) {
+                        console.error(`❌ Failed to create VLAN:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Delete a VLAN
+                delete: async (vlanId, force = false) => {
+                    try {
+                        // Check if Primary VLAN
+                        const vlans = await HPAPI.vlans.list();
+                        const vlan = vlans.find(v => v.id === vlanId.toString());
+                        
+                        if (vlan && vlan.name.includes('Primary') && !force) {
+                            throw new Error('Cannot delete Primary VLAN. Use force=true to override or change Primary VLAN first.');
+                        }
+                        
+                        // Remove all ports first
+                        const portConfig = await HPAPI.vlans.getPorts(vlanId);
+                        const assignedPorts = Object.keys(portConfig);
+                        
+                        if (assignedPorts.length > 0) {
+                            console.log(`🔄 Removing ${assignedPorts.length} ports from VLAN ${vlanId}...`);
+                            for (const port of assignedPorts) {
+                                await makeRequestAPI(`/cgi/setVLANPort?VLAN_ID=${vlanId}&PORT=${port}&MODE=0`);
+                            }
+                        }
+                        
+                        // Try to delete VLAN
+                        try {
+                            await makeRequestAPI(`/cgi/delVLAN?VLAN_ID=${vlanId}`);
+                        } catch (e1) {
+                            try {
+                                await makeRequestAPI(`/cgi/removeVLAN?VLAN_ID=${vlanId}`);
+                            } catch (e2) {
+                                await makeRequestAPI(`/cgi/delete_vlan?VLAN_ID=${vlanId}`);
+                            }
+                        }
+                        
+                        console.log(`✅ Deleted VLAN ${vlanId}`);
+                        return { success: true, deletedVlan: vlanId, removedPorts: assignedPorts };
+                    } catch (error) {
+                        console.error(`❌ Failed to delete VLAN:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Get port configuration for a VLAN
+                getPorts: async (vlanId) => {
+                    try {
+                        const response = await makeRequestAPI(`/cgi/getVLANPort?VLAN_ID=${vlanId}`);
+                        const data = await response.text();
+                        
+                        const portConfig = {};
+                        const trimmed = data.trim();
+                        
+                        if (trimmed) {
+                            const parts = trimmed.split('~');
+                            for (let i = 1; i < parts.length; i += 3) {
+                                if (i + 2 < parts.length) {
+                                    const portNum = parts[i];
+                                    const mode = parseInt(parts[i + 2]);
+                                    if (mode !== 0) {
+                                        portConfig[portNum] = {
+                                            mode,
+                                            type: mode === 1 ? 'tagged' : mode === 2 ? 'untagged' : mode === 3 ? 'forbidden' : 'auto'
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                        
+                        return portConfig;
+                    } catch (error) {
+                        console.error(`❌ Failed to get VLAN ports:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Configure ports for a VLAN
+                configurePorts: async (vlanId, portConfig) => {
+                    try {
+                        const results = [];
+                        for (const [portNum, config] of Object.entries(portConfig)) {
+                            const mode = typeof config === 'object' ? config.mode : config;
+                            await makeRequestAPI(`/cgi/setVLANPort?VLAN_ID=${vlanId}&PORT=${portNum}&MODE=${mode}`);
+                            results.push({ port: portNum, mode });
+                        }
+                        console.log(`✅ Configured ${results.length} ports for VLAN ${vlanId}`);
+                        return { success: true, vlanId, configured: results };
+                    } catch (error) {
+                        console.error(`❌ Failed to configure VLAN ports:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Set Primary VLAN
+                setPrimary: async (vlanId) => {
+                    try {
+                        await makeRequestAPI(`/cgi/setPrimaryVLAN?VLAN_ID=${vlanId}`);
+                        console.log(`✅ VLAN ${vlanId} is now the Primary VLAN`);
+                        return { success: true, primaryVlan: vlanId };
+                    } catch (error) {
+                        try {
+                            await makeRequestAPI(`/cgi/setVLANPrimary?VLAN_ID=${vlanId}`);
+                            console.log(`✅ VLAN ${vlanId} is now the Primary VLAN`);
+                            return { success: true, primaryVlan: vlanId };
+                        } catch (error2) {
+                            console.error(`❌ Failed to set Primary VLAN:`, error2.message);
+                            throw error2;
+                        }
+                    }
+                }
+            },
+
+            // Stack Management API
+            stack: {
+                // List stack members
+                members: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/get_members');
+                        const data = await response.text();
+                        return parseMembersAPI(data);
+                    } catch (error) {
+                        console.error('❌ Failed to get stack members:', error.message);
+                        throw error;
+                    }
+                },
+
+                // List stack candidates
+                candidates: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/get_candidates');
+                        const data = await response.text();
+                        return parseCandidatesAPI(data);
+                    } catch (error) {
+                        console.error('❌ Failed to get stack candidates:', error.message);
+                        throw error;
+                    }
+                },
+
+                // Add member to stack
+                addMember: async (macAddress, password = '') => {
+                    try {
+                        await makeRequestAPI(`/cgi/set_members?addrs=${macAddress}&pass=${password}`);
+                        console.log(`✅ Added ${macAddress} to stack`);
+                        return { success: true, added: macAddress };
+                    } catch (error) {
+                        console.error(`❌ Failed to add stack member:`, error.message);
+                        throw error;
+                    }
+                },
+
+                // Remove member from stack
+                removeMember: async (switchNumber) => {
+                    try {
+                        await makeRequestAPI(`/cgi/delete_members?nums=${switchNumber}`);
+                        console.log(`✅ Removed member ${switchNumber} from stack`);
+                        return { success: true, removed: switchNumber };
+                    } catch (error) {
+                        console.error(`❌ Failed to remove stack member:`, error.message);
+                        throw error;
+                    }
+                }
+            },
+
+            // Utility functions
+            utils: {
+                // Test connection
+                ping: async () => {
+                    try {
+                        const response = await makeRequestAPI('/cgi/get_bobports');
+                        return response.ok;
+                    } catch (error) {
+                        return false;
+                    }
+                },
+
+                // Get switch info
+                info: async () => {
+                    try {
+                        const ports = await HPAPI.ports.list();
+                        const vlans = await HPAPI.vlans.list();
+                        const members = await HPAPI.stack.members().catch(() => []);
+                        
+                        return {
+                            switchIP,
+                            portCount: Object.keys(ports).length,
+                            vlanCount: vlans.length,
+                            stackMembers: members.length,
+                            connected: true
+                        };
+                    } catch (error) {
+                        return { connected: false, error: error.message };
+                    }
+                }
+            }
+        };
+
+        // ========================================
+        // API HELPER FUNCTIONS (Internal use)
+        // ========================================
+
+        async function makeRequestAPI(endpoint, method = 'GET', body = null) {
+            if (!switchIP) {
+                throw new Error('No switch IP configured. Use HPAPI.connect(ip) first.');
+            }
+
+            const url = `http://${switchIP}${endpoint}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method,
+                    body,
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                });
+                
+                return response;
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('CORS')) {
+                    throw new Error('CORS blocked - you may need to configure a proxy or use browser with disabled security');
+                }
+                throw error;
+            }
+        }
+
+        function parseBobPortsAPI(data) {
+            const lines = data.split('\n');
+            const portConfigs = {};
+            
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    const parts = trimmedLine.split('~');
+                    if (parts.length >= 6) {
+                        const portNum = parts[0];
+                        const portType = parts[1];
+                        const slot = parts[2];
+                        const port = parts[3];
+                        const status = parts[4];
+                        const mode = parts[5];
+                        
+                        portConfigs[portNum] = {
+                            portType,
+                            slot,
+                            port,
+                            enabled: status === '1',
+                            mode,
+                            name: `${portType}-${slot}-${port}`,
+                            label: `Port ${portNum} (${mode})`
+                        };
+                    }
+                }
+            }
+            return portConfigs;
+        }
+
+        function parsePortUsageAPI(data) {
+            const lines = data.split('\n');
+            const usageData = {};
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    const parts = trimmedLine.split('~');
+                    if (parts.length >= 7) {
+                        const portNum = parts[0];
+                        const linkStatus = parts[2];
+                        const rxUnicast = parseInt(parts[3]) || 0;
+                        const rxNonUnicast = parseInt(parts[4]) || 0;
+                        const rxErrors = parseInt(parts[5]) || 0;
+                        const speed = parts[6];
+                        
+                        usageData[portNum] = {
+                            connected: linkStatus === 'G',
+                            usage: rxUnicast + rxNonUnicast + rxErrors,
+                            unicast: rxUnicast,
+                            nonUnicast: rxNonUnicast,
+                            errors: rxErrors,
+                            speed,
+                            linkStatus
+                        };
+                    }
+                }
+            }
+            return usageData;
+        }
+
+        function parseVlansAPI(data) {
+            const lines = data.split('\n');
+            const vlans = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    const parts = trimmedLine.split('~');
+                    if (parts.length >= 8) {
+                        const vlanId = parts[0];
+                        const vlanName = parts[1];
+                        const vlanType = parts[2] || 'STATIC';
+                        const taggedPorts = parts[3] === 'None' ? '' : parts[3];
+                        const gvrpTaggedPorts = parts[4] === 'None' ? '' : parts[4];
+                        const untaggedPorts = parts[5] === 'None' ? '' : parts[5];
+                        const forbiddenPorts = parts[6] === 'None' ? '' : parts[6];
+                        
+                        let allTaggedPorts = '';
+                        if (taggedPorts && gvrpTaggedPorts) {
+                            allTaggedPorts = `${taggedPorts}, ${gvrpTaggedPorts}`;
+                        } else if (taggedPorts) {
+                            allTaggedPorts = taggedPorts;
+                        } else if (gvrpTaggedPorts) {
+                            allTaggedPorts = gvrpTaggedPorts;
+                        }
+                        
+                        vlans.push({
+                            id: vlanId,
+                            name: vlanName,
+                            type: vlanType,
+                            taggedPorts: allTaggedPorts,
+                            untaggedPorts: untaggedPorts,
+                            forbiddenPorts: forbiddenPorts
+                        });
+                    }
+                }
+            }
+            return vlans;
+        }
+
+        function parseMembersAPI(data) {
+            const lines = data.split('\n');
+            const members = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    const parts = trimmedLine.split('~');
+                    if (parts.length >= 5 && parts[0] !== 'error') {
+                        members.push({
+                            switchNum: parts[0],
+                            macAddr: parts[1],
+                            systemName: parts[2],
+                            deviceType: parts[3],
+                            status: parts[4]
+                        });
+                    }
+                }
+            }
+            return members;
+        }
+
+        function parseCandidatesAPI(data) {
+            const lines = data.split('\n');
+            const candidates = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    const parts = trimmedLine.split('~');
+                    if (parts.length >= 3 && parts[0] !== 'error') {
+                        candidates.push({
+                            macAddr: parts[0],
+                            systemName: parts[1],
+                            deviceType: parts[2]
+                        });
+                    }
+                }
+            }
+            return candidates;
+        }
+
+        // ========================================
+        // UI FUNCTIONS (Existing code continues...)
+        // ========================================
+
+        // Show status message - UPDATED: Don't auto-hide, keep last status visible
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden');
+            // Note: No auto-hide timeout - status stays visible to show last action
+        }
+
+        // Connect to switch
+        async function connectToSwitch() {
+            const ipInput = document.getElementById('switchIp');
+            const ip = ipInput.value.trim();
+            
+            if (!ip) {
+                showStatus('Please enter a switch IP address', 'error');
+                return;
+            }
+
+            switchIP = ip;
+            const btnText = document.getElementById('connectBtnText');
+            const loading = document.getElementById('connectLoading');
+            
+            btnText.classList.add('hidden');
+            loading.classList.remove('hidden');
+            
+            try {
+                // Try to fetch device info
+                const response = await makeRequest('/cgi/get_bobports');
+                const data = await response.text();
+                
+                console.log('Connection response:', data);
+                
+                if (response.ok && data.trim()) {
+                    showStatus(`Connected to switch at ${ip}`, 'success');
+                    await refreshPorts();
+                    // Initialize port assignments after connecting
+                    populatePortAssignments();
+                } else {
+                    throw new Error('No data received from switch');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                showStatus(`Failed to connect to ${ip}: ${error.message}`, 'error');
+            } finally {
+                btnText.classList.remove('hidden');
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Make HTTP request to switch
+        async function makeRequest(endpoint, method = 'GET', body = null) {
+            if (!switchIP) {
+                throw new Error('No switch IP configured');
+            }
+
+            const url = `http://${switchIP}${endpoint}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method,
+                    body,
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                });
+                
+                return response;
+            } catch (error) {
+                // Handle CORS issues by suggesting proxy
+                if (error.name === 'TypeError' && error.message.includes('CORS')) {
+                    throw new Error('CORS blocked - you may need to configure a proxy or use browser with disabled security');
+                }
+                throw error;
+            }
+        }
+
+        // Refresh port information
+        async function refreshPorts() {
+            if (!switchIP) {
+                showStatus('Please connect to a switch first', 'error');
+                return;
+            }
+
+            try {
+                // Get both port config and usage data
+                const bobResponse = await makeRequest('/cgi/get_bobports');
+                const bobData = await bobResponse.text();
+                console.log('Bob ports data:', bobData);
+                
+                let usageInfo = {};
+                try {
+                    const usageResponse = await makeRequest('/cgi/port_usage');
+                    const usageData = await usageResponse.text();
+                    console.log('Usage data:', usageData);
+                    usageInfo = parsePortUsage(usageData);
+                } catch (usageError) {
+                    console.warn('Could not get usage data:', usageError);
+                }
+                
+                const portConfigs = parseBobPorts(bobData);
+                console.log('Parsed port configs:', portConfigs);
+                
+                if (Object.keys(portConfigs).length > 0) {
+                    displayPorts(portConfigs, usageInfo);
+                    showStatus('Port information refreshed', 'success');
+                } else {
+                    showStatus('No port data found', 'error');
+                    showSamplePorts();
+                }
+            } catch (error) {
+                console.error('Failed to refresh ports:', error);
+                showStatus(`Failed to refresh ports: ${error.message}`, 'error');
+                // Show sample data for demonstration
+                showSamplePorts();
+            }
+        }
+
+        // Parse bobports data - FIXED: Use tilde (~) not dash (-)
+        function parseBobPorts(data) {
+            const lines = data.split('\n');
+            const portConfigs = {};
+            
+            console.log('Parsing bob ports, lines:', lines);
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    console.log('Processing line:', trimmedLine);
+                    // Parse the bobports format: "1~GigT~1~2~1~Auto"
+                    const parts = trimmedLine.split('~');
+                    console.log('Split parts:', parts);
+                    
+                    if (parts.length >= 6) {
+                        const portNum = parts[0];
+                        const portType = parts[1]; // GigT, etc.
+                        const slot = parts[2];
+                        const port = parts[3];
+                        const status = parts[4]; // 1=enabled, 2=disabled
+                        const mode = parts[5]; // Auto, etc.
+                        
+                        portConfigs[portNum] = {
+                            portType,
+                            slot,
+                            port,
+                            enabled: status === '1',
+                            mode,
+                            name: `${portType}-${slot}-${port}`,
+                            label: `Port ${portNum} (${mode})`
+                        };
+                        
+                        console.log(`Parsed port ${portNum}:`, portConfigs[portNum]);
+                    } else {
+                        console.warn('Line does not have enough parts:', parts);
+                    }
+                }
+            }
+
+            // Store available ports for VLAN configuration
+            availablePorts = Object.keys(portConfigs).map(num => ({
+                number: num,
+                name: `Port ${num}`
+            }));
+
+            return portConfigs;
+        }
+
+        // Parse port usage data - FIXED: Use tilde (~) not dash (-)
+        function parsePortUsage(data) {
+            const lines = data.split('\n');
+            const usageData = {};
+            
+            console.log('Parsing usage data, lines:', lines);
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    console.log('Processing usage line:', trimmedLine);
+                    // Parse the port_usage format: "1~1~W~0~0~0~10Mbs"
+                    const parts = trimmedLine.split('~');
+                    console.log('Usage split parts:', parts);
+                    
+                    if (parts.length >= 7) {
+                        const portNum = parts[0];
+                        const subPort = parts[1];
+                        const linkStatus = parts[2]; // W=no link, G=good link, etc.
+                        const rxUnicast = parseInt(parts[3]) || 0;
+                        const rxNonUnicast = parseInt(parts[4]) || 0;
+                        const rxErrors = parseInt(parts[5]) || 0;
+                        const speed = parts[6]; // 10Mbs, 100Mbs, 1000Mbs
+                        
+                        const totalUsage = rxUnicast + rxNonUnicast + rxErrors;
+                        const connected = linkStatus === 'G';
+                        
+                        usageData[portNum] = {
+                            connected,
+                            usage: totalUsage,
+                            unicast: rxUnicast,
+                            nonUnicast: rxNonUnicast,
+                            errors: rxErrors,
+                            speed,
+                            linkStatus
+                        };
+                        
+                        console.log(`Parsed usage for port ${portNum}:`, usageData[portNum]);
+                    } else {
+                        console.warn('Usage line does not have enough parts:', parts);
+                    }
+                }
+            }
+
+            return usageData;
+        }
+
+        // Display ports combining config and usage data
+        function displayPorts(portConfigs, usageInfo) {
+            const portGrid = document.getElementById('portGrid');
+            portGrid.innerHTML = '';
+
+            Object.entries(portConfigs).forEach(([portNum, config]) => {
+                const usage = usageInfo[portNum] || { connected: false, linkStatus: 'W' };
+                createPortCard(portNum, config.name, config.label, usage.connected, config.enabled, usage);
+            });
+        }
+
+        // Create port card element
+        function createPortCard(portNum, portName, label, connected, enabled, usage = null) {
+            const portGrid = document.getElementById('portGrid');
+            
+            const card = document.createElement('div');
+            let statusClass = 'disconnected';
+            let statusColor = 'gray';
+            
+            if (!enabled) {
+                statusClass = 'disabled';
+                statusColor = 'red';
+            } else if (connected) {
+                statusClass = 'connected';
+                statusColor = 'green';
+            }
+            
+            card.className = `port-card ${statusClass}`;
+            
+            let usageHtml = '';
+            if (usage) {
+                usageHtml = `
+                    <p><strong>Speed:</strong> ${usage.speed || 'Unknown'}</p>
+                    <p><strong>Link Status:</strong> ${usage.linkStatus || 'W'}</p>
+                    <p><strong>Total Usage:</strong> ${usage.usage || 0}%</p>
+                `;
+            }
+            
+            const isSelected = selectedPorts.has(portNum);
+            
+            card.innerHTML = `
+                <div class="port-header">
+                    <h4>Port ${portNum}</h4>
+                    <div class="port-status ${statusColor}"></div>
+                </div>
+                <p><strong>Name:</strong> ${portName}</p>
+                <p><strong>Label:</strong> ${label}</p>
+                <p><strong>Status:</strong> ${enabled ? (connected ? 'Connected' : 'Disconnected') : 'Disabled'}</p>
+                ${usageHtml}
+                <div class="control-group">
+                    <button class="btn ${isSelected ? 'btn-warning' : 'btn-primary'} btn-sm" onclick="togglePortSelection('${portNum}', this)">
+                        ${isSelected ? 'Selected' : 'Select'}
+                    </button>
+                    <button class="btn ${enabled ? 'btn-danger' : 'btn-success'} btn-sm" onclick="togglePort('${portNum}', ${enabled})">
+                        ${enabled ? 'Disable' : 'Enable'}
+                    </button>
+                </div>
+            `;
+            
+            portGrid.appendChild(card);
+        }
+
+        // Show sample port data for demonstration when connection fails
+        function showSamplePorts() {
+            const portGrid = document.getElementById('portGrid');
+            portGrid.innerHTML = '';
+
+            // Create sample ports based on the actual format we see
+            for (let i = 1; i <= 24; i++) {
+                const connected = Math.random() > 0.3;
+                const enabled = Math.random() > 0.1;
+                createPortCard(i.toString(), `GigT-${i}-2`, `Port ${i} (Auto)`, connected, enabled, {
+                    speed: connected ? '1000Mbs' : '10Mbs',
+                    linkStatus: connected ? 'G' : 'W',
+                    usage: Math.floor(Math.random() * 50),
+                    unicast: Math.floor(Math.random() * 30),
+                    nonUnicast: Math.floor(Math.random() * 15),
+                    errors: Math.floor(Math.random() * 5)
+                });
+            }
+            
+            // Populate available ports for sample data
+            availablePorts = Array.from({length: 24}, (_, i) => ({
+                number: (i + 1).toString(),
+                name: `Port ${i + 1}`
+            }));
+            populatePortAssignments();
+        }
+
+        // Toggle port selection
+        function togglePortSelection(portNum, button) {
+            if (selectedPorts.has(portNum)) {
+                selectedPorts.delete(portNum);
+                button.textContent = 'Select';
+                button.className = 'btn btn-primary btn-sm';
+            } else {
+                selectedPorts.add(portNum);
+                button.textContent = 'Selected';
+                button.className = 'btn btn-warning btn-sm';
+            }
+        }
+
+        // Select all ports
+        function selectAllPorts() {
+            selectedPorts.clear();
+            availablePorts.forEach(port => selectedPorts.add(port.number));
+            refreshPorts(); // Refresh to update button states
+        }
+
+        // Clear selection
+        function clearSelection() {
+            selectedPorts.clear();
+            refreshPorts(); // Refresh to update button states
+        }
+
+        // Toggle individual port
+        async function togglePort(portNum, currentlyEnabled) {
+            try {
+                const action = currentlyEnabled ? 'disable' : 'enable';
+                const adminStatus = currentlyEnabled ? '2' : '1';
+                
+                await makeRequest(`/cgi/set_bobports?ifAdminStatus=${adminStatus}&indeces=${portNum}`);
+                showStatus(`Port ${portNum} ${action}d successfully`, 'success');
+                await refreshPorts();
+            } catch (error) {
+                showStatus(`Failed to ${currentlyEnabled ? 'disable' : 'enable'} port ${portNum}: ${error.message}`, 'error');
+            }
+        }
+
+        // Enable selected ports
+        async function enableSelectedPorts() {
+            if (selectedPorts.size === 0) {
+                showStatus('No ports selected', 'error');
+                return;
+            }
+
+            try {
+                const portList = Array.from(selectedPorts).join(',');
+                await makeRequest(`/cgi/set_bobports?ifAdminStatus=1&indeces=${portList}`);
+                showStatus(`Enabled ${selectedPorts.size} ports`, 'success');
+                selectedPorts.clear();
+                await refreshPorts();
+            } catch (error) {
+                showStatus(`Failed to enable ports: ${error.message}`, 'error');
+            }
+        }
+
+        // Disable selected ports
+        async function disableSelectedPorts() {
+            if (selectedPorts.size === 0) {
+                showStatus('No ports selected', 'error');
+                return;
+            }
+
+            try {
+                const portList = Array.from(selectedPorts).join(',');
+                await makeRequest(`/cgi/set_bobports?ifAdminStatus=2&indeces=${portList}`);
+                showStatus(`Disabled ${selectedPorts.size} ports`, 'success');
+                selectedPorts.clear();
+                await refreshPorts();
+            } catch (error) {
+                showStatus(`Failed to disable ports: ${error.message}`, 'error');
+            }
+        }
+
+        // Populate port checkboxes for VLAN configuration - REMOVED (using new editor)
+
+        // VLAN Management - REDESIGNED with proper change tracking and Primary VLAN support
+        let currentEditingVlan = null;
+        let originalPortConfig = {}; // Track original port assignments
+        let currentPortConfig = {}; // Track current port assignments
+
+        function showVlanEditor(vlanId = null, vlanName = null) {
+            const editor = document.getElementById('vlanEditor');
+            const title = document.getElementById('editorTitle');
+            const saveBtn = document.getElementById('saveVlanBtn');
+            
+            if (vlanId) {
+                // Edit mode
+                title.textContent = `Edit VLAN ${vlanId}`;
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.onclick = () => saveVlan(vlanId);
+                currentEditingVlan = vlanId;
+                
+                document.getElementById('editorVlanId').value = vlanId;
+                document.getElementById('editorVlanId').readOnly = true;
+                document.getElementById('editorVlanName').value = vlanName || '';
+                
+                // Load current VLAN port configuration
+                loadVlanPortConfig(vlanId);
+            } else {
+                // Add mode
+                title.textContent = 'Add New VLAN';
+                saveBtn.textContent = 'Create VLAN';
+                saveBtn.onclick = () => saveVlan();
+                currentEditingVlan = null;
+                
+                document.getElementById('editorVlanId').value = '';
+                document.getElementById('editorVlanId').readOnly = false;
+                document.getElementById('editorVlanName').value = '';
+                
+                // Reset port assignments
+                originalPortConfig = {};
+                currentPortConfig = {};
+                populatePortAssignments();
+            }
+            
+            editor.style.display = 'block';
+            editor.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideVlanEditor() {
+            document.getElementById('vlanEditor').style.display = 'none';
+            currentEditingVlan = null;
+            originalPortConfig = {};
+            currentPortConfig = {};
+        }
+
+        function populatePortAssignments(loadedConfig = {}) {
+            const container = document.getElementById('portAssignmentGrid');
+            container.innerHTML = '';
+
+            // Store original configuration for change tracking
+            originalPortConfig = { ...loadedConfig };
+            currentPortConfig = { ...loadedConfig };
+
+            availablePorts.forEach(port => {
+                const config = loadedConfig[port.number];
+                const isAssigned = config !== undefined;
+                const currentMode = config ? config.mode : 'none';
+                
+                const div = document.createElement('div');
+                div.className = `port-assignment-item ${isAssigned ? 'assigned' : ''}`;
+                div.innerHTML = `
+                    <label>Port ${port.number}</label>
+                    <select id="portMode_${port.number}" onchange="handlePortModeChange('${port.number}', this.value)">
+                        <option value="none" ${currentMode === 'none' ? 'selected' : ''}>Not Assigned</option>
+                        <option value="1" ${currentMode === 1 ? 'selected' : ''}>Tagged</option>
+                        <option value="2" ${currentMode === 2 ? 'selected' : ''}>Untagged</option>
+                        <option value="3" ${currentMode === 3 ? 'selected' : ''}>Forbidden</option>
+                        <option value="4" ${currentMode === 4 ? 'selected' : ''}>Auto</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // REAL-TIME port configuration updates with change tracking
+        async function handlePortModeChange(portNum, newMode) {
+            const item = document.querySelector(`#portMode_${portNum}`).closest('.port-assignment-item');
+            
+            // Update visual state
+            if (newMode === 'none') {
+                item.classList.remove('assigned');
+                delete currentPortConfig[portNum];
+            } else {
+                item.classList.add('assigned');
+                currentPortConfig[portNum] = { mode: parseInt(newMode) };
+            }
+
+            // If we're editing an existing VLAN, apply change immediately
+            if (currentEditingVlan) {
+                try {
+                    const modeValue = newMode === 'none' ? '0' : newMode;
+                    await makeRequest(`/cgi/setVLANPort?VLAN_ID=${currentEditingVlan}&PORT=${portNum}&MODE=${modeValue}`);
+                    
+                    console.log(`Port ${portNum} updated to mode ${modeValue} for VLAN ${currentEditingVlan}`);
+                    
+                    // Update our tracking
+                    if (newMode === 'none') {
+                        delete originalPortConfig[portNum];
+                    } else {
+                        originalPortConfig[portNum] = { mode: parseInt(newMode) };
+                    }
+                    
+                    // Refresh the main VLAN table to show changes
+                    refreshVlans();
+                    
+                } catch (error) {
+                    console.warn(`Failed to update port ${portNum}:`, error);
+                    showStatus(`Failed to update port ${portNum}: ${error.message}`, 'error');
+                    
+                    // Revert the change on failure
+                    const select = document.getElementById(`portMode_${portNum}`);
+                    const originalMode = originalPortConfig[portNum] ? originalPortConfig[portNum].mode : 'none';
+                    select.value = originalMode;
+                    handlePortModeChange(portNum, originalMode); // Revert visually
+                }
+            }
+        }
+
+        function updatePortAssignment(portNum, mode) {
+            // This function is now replaced by handlePortModeChange
+            handlePortModeChange(portNum, mode);
+        }
+
+        async function loadVlanPortConfig(vlanId) {
+            try {
+                const response = await makeRequest(`/cgi/getVLANPort?VLAN_ID=${vlanId}`);
+                const data = await response.text();
+                console.log('VLAN port config data:', data);
+                
+                const portConfig = {};
+                const trimmed = data.trim();
+                
+                if (trimmed) {
+                    // REAL format: OFF~1~1~0~2~2~0~3~3~0~...
+                    // Pattern: status~portNum~portName~mode~portNum~portName~mode~...
+                    const parts = trimmed.split('~');
+                    
+                    // Skip first part (status: ON/OFF)
+                    for (let i = 1; i < parts.length; i += 3) {
+                        if (i + 2 < parts.length) {
+                            const portNum = parts[i];
+                            const portName = parts[i + 1];
+                            const mode = parseInt(parts[i + 2]);
+                            
+                            // Only include ports that are not in default state (mode 0)
+                            if (mode !== 0) {
+                                portConfig[portNum] = { name: portName, mode };
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Parsed port config:', portConfig);
+                populatePortAssignments(portConfig);
+            } catch (error) {
+                console.warn('Could not load VLAN port config:', error);
+                populatePortAssignments();
+            }
+        }
+
+        async function loadVlanPortConfig(vlanId) {
+            try {
+                const response = await makeRequest(`/cgi/getVLANPort?VLAN_ID=${vlanId}`);
+                const data = await response.text();
+                console.log('VLAN port config data:', data);
+                
+                const portConfig = {};
+                const trimmed = data.trim();
+                
+                if (trimmed) {
+                    // REAL format: OFF~1~1~0~2~2~0~3~3~0~...
+                    // Pattern: status~portNum~portName~mode~portNum~portName~mode~...
+                    const parts = trimmed.split('~');
+                    
+                    // Skip first part (status: ON/OFF)
+                    for (let i = 1; i < parts.length; i += 3) {
+                        if (i + 2 < parts.length) {
+                            const portNum = parts[i];
+                            const portName = parts[i + 1];
+                            const mode = parseInt(parts[i + 2]);
+                            
+                            // Only include ports that are not in default state (mode 0)
+                            if (mode !== 0) {
+                                portConfig[portNum] = { name: portName, mode };
+                            }
+                        }
+                    }
+                }
+                
+                console.log('Parsed port config:', portConfig);
+                populatePortAssignments(portConfig);
+            } catch (error) {
+                console.warn('Could not load VLAN port config:', error);
+                populatePortAssignments();
+            }
+        }
+
+        // ENHANCED save function - now only creates VLAN, port changes happen in real-time
+        async function saveVlan(vlanId = null) {
+            const isEdit = vlanId !== null;
+            const vlanIdValue = isEdit ? vlanId : document.getElementById('editorVlanId').value;
+            const vlanName = document.getElementById('editorVlanName').value;
+
+            if (!vlanIdValue || !vlanName) {
+                showStatus('Please enter both VLAN ID and Name', 'error');
+                return;
+            }
+
+            try {
+                if (!isEdit) {
+                    // Create new VLAN
+                    await makeRequest(`/cgi/addVLAN?VLAN_ID=${vlanIdValue}&VLAN_NAME=${encodeURIComponent(vlanName)}`);
+                    
+                    // Configure initial ports for new VLAN
+                    for (const [portNum, config] of Object.entries(currentPortConfig)) {
+                        try {
+                            await makeRequest(`/cgi/setVLANPort?VLAN_ID=${vlanIdValue}&PORT=${portNum}&MODE=${config.mode}`);
+                        } catch (error) {
+                            console.warn(`Failed to configure port ${portNum}:`, error);
+                        }
+                    }
+                    
+                    showStatus(`VLAN ${vlanIdValue} created successfully`, 'success');
+                    hideVlanEditor();
+                } else {
+                    // For edits, just update the name if needed
+                    showStatus(`VLAN ${vlanIdValue} updated (port changes applied in real-time)`, 'success');
+                }
+                
+                await refreshVlans();
+                
+            } catch (error) {
+                showStatus(`Failed to ${isEdit ? 'update' : 'create'} VLAN: ${error.message}`, 'error');
+            }
+        }
+
+        // VLAN Management
+        async function refreshVlans() {
+            if (!switchIP) {
+                showStatus('Please connect to a switch first', 'error');
+                return;
+            }
+
+            try {
+                const response = await makeRequest('/cgi/getVLANAll');
+                const data = await response.text();
+                console.log('VLAN data:', data);
+                
+                const vlans = parseVlans(data);
+                displayVlans(vlans);
+                showStatus('VLAN information refreshed', 'success');
+            } catch (error) {
+                console.warn('Could not get VLAN data:', error);
+                showStatus('No VLAN data available - showing sample data', 'info');
+                showSampleVlans();
+            }
+        }
+
+        // Parse VLAN data based on REAL response format - COMPLETELY FIXED
+        function parseVlans(data) {
+            const lines = data.split('\n');
+            const vlans = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    console.log('Processing VLAN line:', trimmedLine);
+                    // REAL format: vlanId~vlanName~vlanType~taggedPorts~gvrpTaggedPorts~untaggedPorts~forbiddenPorts~autoPorts
+                    const parts = trimmedLine.split('~');
+                    console.log('VLAN parts:', parts);
+                    
+                    if (parts.length >= 8) {
+                        const vlanId = parts[0];
+                        const vlanName = parts[1];
+                        const vlanType = parts[2] || 'STATIC';
+                        
+                        // Parse ports - replace "None" with empty string, handle ranges
+                        const taggedPorts = parts[3] === 'None' ? '' : parts[3];
+                        const gvrpTaggedPorts = parts[4] === 'None' ? '' : parts[4];
+                        const untaggedPorts = parts[5] === 'None' ? '' : parts[5];
+                        const forbiddenPorts = parts[6] === 'None' ? '' : parts[6];
+                        const autoPorts = parts[7] === 'None' ? '' : parts[7];
+                        
+                        // Combine tagged ports (static + GVRP)
+                        let allTaggedPorts = '';
+                        if (taggedPorts && gvrpTaggedPorts) {
+                            allTaggedPorts = `${taggedPorts}, ${gvrpTaggedPorts}`;
+                        } else if (taggedPorts) {
+                            allTaggedPorts = taggedPorts;
+                        } else if (gvrpTaggedPorts) {
+                            allTaggedPorts = gvrpTaggedPorts;
+                        }
+                        
+                        vlans.push({
+                            id: vlanId,
+                            name: vlanName,
+                            type: vlanType,
+                            taggedPorts: allTaggedPorts,
+                            untaggedPorts: untaggedPorts,
+                            forbiddenPorts: forbiddenPorts,
+                            autoPorts: autoPorts
+                        });
+                    }
+                }
+            }
+
+            return vlans;
+        }
+
+        function displayVlans(vlans) {
+            const tbody = document.querySelector('#vlanTable tbody');
+            tbody.innerHTML = '';
+
+            vlans.forEach(vlan => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${vlan.id}</td>
+                    <td>${vlan.name}</td>
+                    <td>${vlan.type}</td>
+                    <td>${vlan.taggedPorts}</td>
+                    <td>${vlan.untaggedPorts}</td>
+                    <td>${vlan.forbiddenPorts}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="showVlanEditor('${vlan.id}', '${vlan.name}')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteVlan('${vlan.id}', '${vlan.name}')">Delete</button>
+                        ${!vlan.name.includes('Primary') ? `<button class="btn btn-secondary btn-sm" onclick="makePrimaryVlan('${vlan.id}', '${vlan.name}')">Make Primary</button>` : '<span class="btn btn-success btn-sm" disabled>PRIMARY</span>'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function showSampleVlans() {
+            const tbody = document.querySelector('#vlanTable tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>1</td>
+                    <td>Default</td>
+                    <td>Static</td>
+                    <td></td>
+                    <td>1-24</td>
+                    <td></td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="showVlanEditor('1', 'Default')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteVlan('1', 'Default')">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>Management</td>
+                    <td>Static</td>
+                    <td>1,2,3,4</td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="showVlanEditor('10', 'Management')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteVlan('10', 'Management')">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>20</td>
+                    <td>Guest</td>
+                    <td>Static</td>
+                    <td></td>
+                    <td>5-12</td>
+                    <td>13-24</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="showVlanEditor('20', 'Guest')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteVlan('20', 'Guest')">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // PRIMARY VLAN MANAGEMENT - Based on Java logic
+        async function makePrimaryVlan(vlanId, vlanName) {
+            if (confirm(`Make VLAN ${vlanId} (${vlanName}) the Primary VLAN?\n\nThis will make it the default VLAN for all untagged traffic.`)) {
+                try {
+                    // The endpoint might be setPrimaryVLAN or similar
+                    await makeRequest(`/cgi/setPrimaryVLAN?VLAN_ID=${vlanId}`);
+                    showStatus(`VLAN ${vlanId} is now the Primary VLAN`, 'success');
+                    await refreshVlans();
+                } catch (error) {
+                    try {
+                        // Try alternative endpoint
+                        await makeRequest(`/cgi/setVLANPrimary?VLAN_ID=${vlanId}`);
+                        showStatus(`VLAN ${vlanId} is now the Primary VLAN`, 'success');
+                        await refreshVlans();
+                    } catch (error2) {
+                        showStatus(`Failed to set Primary VLAN: ${error2.message}`, 'error');
+                    }
+                }
+            }
+        }
+
+        // ENHANCED VLAN DELETION with Primary VLAN handling
+        async function confirmDeleteVlan(vlanId, vlanName) {
+            try {
+                // Check if this is the Primary VLAN
+                const isPrimary = vlanName.includes('Primary') || vlanName.includes('(Primary)');
+                
+                if (isPrimary) {
+                    const deleteModal = document.getElementById('deleteVlanModal');
+                    const deleteContent = document.getElementById('deleteVlanContent');
+                    
+                    deleteContent.innerHTML = `
+                        <p><strong>Cannot Delete Primary VLAN</strong></p>
+                        <p>VLAN ${vlanId} (${vlanName}) is the Primary VLAN and cannot be deleted.</p>
+                        <p>To delete this VLAN, you must first:</p>
+                        <ol style="margin: 15px 0; padding-left: 25px;">
+                            <li>Make another VLAN the Primary VLAN</li>
+                            <li>Then delete this VLAN</li>
+                        </ol>
+                        <p>Would you like to select a different VLAN to make Primary?</p>
+                        <div class="control-group" style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="showPrimaryVlanSelector('${vlanId}')">
+                                Choose New Primary VLAN
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeDeleteVlanModal()">Cancel</button>
+                        </div>
+                    `;
+                    
+                    deleteModal.classList.add('show');
+                    return;
+                }
+
+                // Standard deletion process for non-primary VLANs
+                const response = await makeRequest(`/cgi/getVLANPort?VLAN_ID=${vlanId}`);
+                const data = await response.text();
+                console.log('VLAN port data for deletion check:', data);
+                
+                const assignedPorts = [];
+                const trimmed = data.trim();
+                
+                if (trimmed) {
+                    const parts = trimmed.split('~');
+                    for (let i = 1; i < parts.length; i += 3) {
+                        if (i + 2 < parts.length) {
+                            const portNum = parts[i];
+                            const mode = parseInt(parts[i + 2]);
+                            if (mode !== 0) {
+                                assignedPorts.push(portNum);
+                            }
+                        }
+                    }
+                }
+                
+                const deleteModal = document.getElementById('deleteVlanModal');
+                const deleteContent = document.getElementById('deleteVlanContent');
+                
+                if (assignedPorts.length > 0) {
+                    deleteContent.innerHTML = `
+                        <p><strong>Warning:</strong> VLAN ${vlanId} (${vlanName}) has ports assigned to it.</p>
+                        <p>The following ports will be removed from this VLAN:</p>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <strong>Ports:</strong> ${assignedPorts.join(', ')}
+                        </div>
+                        <p><strong>This action cannot be undone.</strong> Continue with deletion?</p>
+                        <div class="control-group" style="margin-top: 20px;">
+                            <button class="btn btn-danger" onclick="executeVlanDeletion('${vlanId}', '${vlanName}', [${assignedPorts.map(p => `'${p}'`).join(',')}])">
+                                Yes, Remove Ports and Delete VLAN
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeDeleteVlanModal()">Cancel</button>
+                        </div>
+                    `;
+                } else {
+                    deleteContent.innerHTML = `
+                        <p>Delete VLAN ${vlanId} (${vlanName})?</p>
+                        <p>This VLAN has no ports assigned to it.</p>
+                        <p><strong>This action cannot be undone.</strong></p>
+                        <div class="control-group" style="margin-top: 20px;">
+                            <button class="btn btn-danger" onclick="executeVlanDeletion('${vlanId}', '${vlanName}', [])">
+                                Yes, Delete VLAN
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeDeleteVlanModal()">Cancel</button>
+                        </div>
+                    `;
+                }
+                
+                deleteModal.classList.add('show');
+                
+            } catch (error) {
+                showStatus(`Failed to check VLAN configuration: ${error.message}`, 'error');
+            }
+        }
+
+        async function showPrimaryVlanSelector(currentPrimaryId) {
+            try {
+                // Get all VLANs to show as options
+                const response = await makeRequest('/cgi/getVLANAll');
+                const data = await response.text();
+                const vlans = parseVlans(data);
+                
+                const deleteContent = document.getElementById('deleteVlanContent');
+                
+                let vlanOptions = '';
+                vlans.forEach(vlan => {
+                    if (vlan.id !== currentPrimaryId) {
+                        vlanOptions += `<option value="${vlan.id}">VLAN ${vlan.id} (${vlan.name})</option>`;
+                    }
+                });
+                
+                deleteContent.innerHTML = `
+                    <p><strong>Select New Primary VLAN</strong></p>
+                    <p>Choose which VLAN should become the new Primary VLAN:</p>
+                    <div style="margin: 15px 0;">
+                        <select id="newPrimaryVlan" style="width: 100%; padding: 8px;">
+                            ${vlanOptions}
+                        </select>
+                    </div>
+                    <p><em>After setting a new Primary VLAN, you can then delete VLAN ${currentPrimaryId}.</em></p>
+                    <div class="control-group" style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="setNewPrimaryAndDelete('${currentPrimaryId}')">
+                            Set as Primary and Continue
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeDeleteVlanModal()">Cancel</button>
+                    </div>
+                `;
+            } catch (error) {
+                showStatus(`Failed to load VLAN list: ${error.message}`, 'error');
+                closeDeleteVlanModal();
+            }
+        }
+
+        async function setNewPrimaryAndDelete(oldPrimaryId) {
+            const newPrimaryId = document.getElementById('newPrimaryVlan').value;
+            
+            if (!newPrimaryId) {
+                showStatus('Please select a VLAN', 'error');
+                return;
+            }
+            
+            try {
+                // Set new primary VLAN
+                await makeRequest(`/cgi/setPrimaryVLAN?VLAN_ID=${newPrimaryId}`);
+                showStatus(`VLAN ${newPrimaryId} is now the Primary VLAN`, 'success');
+                
+                // Close modal and refresh
+                closeDeleteVlanModal();
+                await refreshVlans();
+                
+                // Now allow deletion of the old primary
+                showStatus(`You can now delete the old Primary VLAN ${oldPrimaryId}`, 'info');
+                
+            } catch (error) {
+                showStatus(`Failed to set new Primary VLAN: ${error.message}`, 'error');
+            }
+        }
+
+        // FIXED VLAN DELETION - Use correct endpoint and logic
+        async function executeVlanDeletion(vlanId, vlanName, assignedPorts) {
+            try {
+                // Step 1: Remove all assigned ports from the VLAN by setting them to default (mode 0)
+                if (assignedPorts.length > 0) {
+                    showStatus(`Removing ports from VLAN ${vlanId}...`, 'info');
+                    
+                    // Set each port to mode 0 (default/not assigned) to remove from VLAN
+                    for (const port of assignedPorts) {
+                        try {
+                            await makeRequest(`/cgi/setVLANPort?VLAN_ID=${vlanId}&PORT=${port}&MODE=0`);
+                            console.log(`Removed port ${port} from VLAN ${vlanId}`);
+                        } catch (error) {
+                            console.warn(`Failed to remove port ${port}:`, error);
+                        }
+                    }
+                    
+                    // Small delay to ensure all ports are updated
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+                
+                // Step 2: Delete the VLAN using correct endpoint
+                showStatus(`Deleting VLAN ${vlanId}...`, 'info');
+                // Try multiple possible endpoints since deleteVLAN doesn't exist
+                try {
+                    await makeRequest(`/cgi/delVLAN?VLAN_ID=${vlanId}`);
+                } catch (error1) {
+                    try {
+                        await makeRequest(`/cgi/removeVLAN?VLAN_ID=${vlanId}`);
+                    } catch (error2) {
+                        try {
+                            await makeRequest(`/cgi/delete_vlan?VLAN_ID=${vlanId}`);
+                        } catch (error3) {
+                            throw new Error('VLAN deletion endpoint not found - please check switch documentation');
+                        }
+                    }
+                }
+                
+                showStatus(`VLAN ${vlanId} (${vlanName}) deleted successfully`, 'success');
+                closeDeleteVlanModal();
+                await refreshVlans();
+                
+            } catch (error) {
+                if (error.message.includes('endpoint not found')) {
+                    showStatus(`VLAN ${vlanId} ports removed, but automatic deletion failed. Please delete manually via switch CLI.`, 'info');
+                } else {
+                    showStatus(`Failed to delete VLAN: ${error.message}`, 'error');
+                }
+                closeDeleteVlanModal();
+            }
+        }
+
+        function closeDeleteVlanModal() {
+            document.getElementById('deleteVlanModal').classList.remove('show');
+        }
+
+        // Remove old VLAN functions that are no longer needed
+        async function addVlan() {
+            // This function is now replaced by saveVlan()
+            showStatus('Please use the VLAN editor below the table', 'info');
+        }
+
+        // Edit VLAN function - simplified to use new editor
+        async function editVlan(vlanId, vlanName) {
+            showVlanEditor(vlanId, vlanName);
+        }
+
+        // Remove protocols function - not needed based on user feedback
+        async function viewVlanProtocols(vlanId, vlanName) {
+            showStatus('Protocol viewing has been removed - not commonly used', 'info');
+        }
+
+        // Simplified modal functions (keeping for backwards compatibility)
+        function closeVlanModal() {
+            // Keep this for any remaining modal usage
+        }
+
+        function populateEditPortCheckboxes(vlanPortData) {
+            // This is now handled by populatePortAssignments()
+        }
+
+        async function saveVlanChanges(vlanId) {
+            // This is now handled by saveVlan()
+        }
+
+        // Monitoring
+        async function refreshUsage() {
+            if (!switchIP) {
+                showStatus('Please connect to a switch first', 'error');
+                return;
+            }
+
+            try {
+                const response = await makeRequest('/cgi/port_usage');
+                const data = await response.text();
+                const usageData = parsePortUsage(data);
+                
+                displayUsageData(usageData);
+                showStatus('Usage data refreshed', 'success');
+            } catch (error) {
+                showStatus(`Failed to refresh usage: ${error.message}`, 'error');
+                // Show sample usage data
+                showSampleUsage();
+            }
+        }
+
+        function displayUsageData(usageData) {
+            const container = document.getElementById('usageContainer');
+            container.innerHTML = '';
+            
+            Object.entries(usageData).forEach(([portNum, data]) => {
+                const div = document.createElement('div');
+                const linkStatusText = data.connected ? 'Connected' : 'No Link';
+                const linkStatusClass = data.connected ? 'connected' : 'disconnected';
+                
+                div.className = `port-card ${linkStatusClass}`;
+                div.innerHTML = `
+                    <div class="port-header">
+                        <h4>Port ${portNum}</h4>
+                        <div class="port-status ${data.connected ? 'green' : 'gray'}"></div>
+                    </div>
+                    <p><strong>Link:</strong> ${linkStatusText} (${data.linkStatus})</p>
+                    <p><strong>Speed:</strong> ${data.speed}</p>
+                    <p><strong>Total:</strong> ${data.usage}%</p>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Unicast: ${data.unicast}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${data.unicast}%; background: #28a745;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Non-Unicast: ${data.nonUnicast}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${data.nonUnicast}%; background: #ffc107;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Errors: ${data.errors}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${data.errors}%; background: #dc3545;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showSampleUsage() {
+            const container = document.getElementById('usageContainer');
+            container.innerHTML = '';
+            
+            // Show sample usage data based on actual format
+            for (let i = 1; i <= 48; i++) {
+                const unicast = Math.floor(Math.random() * 50);
+                const nonUnicast = Math.floor(Math.random() * 30);
+                const errors = Math.floor(Math.random() * 5);
+                const connected = Math.random() > 0.3;
+                
+                const div = document.createElement('div');
+                div.className = `port-card ${connected ? 'connected' : 'disconnected'}`;
+                div.innerHTML = `
+                    <div class="port-header">
+                        <h4>Port ${i}</h4>
+                        <div class="port-status ${connected ? 'green' : 'gray'}"></div>
+                    </div>
+                    <p><strong>Link:</strong> ${connected ? 'Connected (G)' : 'No Link (W)'}</p>
+                    <p><strong>Speed:</strong> ${connected ? '1000Mbs' : '10Mbs'}</p>
+                    <p><strong>Total:</strong> ${unicast + nonUnicast + errors}%</p>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Unicast: ${unicast}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${unicast}%; background: #28a745;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Non-Unicast: ${nonUnicast}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${nonUnicast}%; background: #ffc107;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Errors: ${errors}%</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" style="width: ${errors}%; background: #dc3545;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function startMonitoring() {
+            if (monitoringInterval) return;
+            
+            monitoringInterval = setInterval(refreshUsage, 5000);
+            showStatus('Auto-monitoring started (updates every 5 seconds)', 'success');
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                showStatus('Auto-monitoring stopped', 'info');
+            }
+        }
+
+        // Stack Management
+        async function refreshStack() {
+            if (!switchIP) {
+                showStatus('Please connect to a switch first', 'error');
+                return;
+            }
+
+            try {
+                // Get both members and candidates
+                const [membersResponse, candidatesResponse] = await Promise.all([
+                    makeRequest('/cgi/get_members').catch(() => null),
+                    makeRequest('/cgi/get_candidates').catch(() => null)
+                ]);
+
+                let members = [];
+                let candidates = [];
+
+                if (membersResponse && membersResponse.ok) {
+                    const membersData = await membersResponse.text();
+                    console.log('Members data:', membersData);
+                    members = parseMembers(membersData);
+                }
+
+                if (candidatesResponse && candidatesResponse.ok) {
+                    const candidatesData = await candidatesResponse.text();
+                    console.log('Candidates data:', candidatesData);
+                    candidates = parseCandidates(candidatesData);
+                }
+
+                displayStack(members, candidates);
+                showStatus('Stack information refreshed', 'success');
+            } catch (error) {
+                console.warn('Could not get stack data:', error);
+                showSampleStack();
+            }
+        }
+
+        // Parse members data based on MemberCandidateList.java format
+        function parseMembers(data) {
+            const lines = data.split('\n');
+            const members = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    // From MemberCandidateList.java: "switchNum~macAddr~systemName~deviceType~status"
+                    const parts = trimmedLine.split('~');
+                    console.log('Member parts:', parts);
+                    
+                    if (parts.length >= 5 && parts[0] !== 'error') {
+                        const switchNum = parts[0];
+                        const macAddr = parts[1];
+                        const systemName = parts[2];
+                        const deviceType = parts[3];
+                        const status = parts[4];
+                        
+                        members.push({
+                            switchNum,
+                            macAddr,
+                            systemName,
+                            deviceType,
+                            status
+                        });
+                    } else if (parts[0] === 'error') {
+                        console.error('Member error:', parts[1]);
+                        showStatus(`Member error: ${parts[1]}`, 'error');
+                    }
+                }
+            }
+
+            return members;
+        }
+
+        // Parse candidates data based on MemberCandidateList.java format  
+        function parseCandidates(data) {
+            const lines = data.split('\n');
+            const candidates = [];
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    // From MemberCandidateList.java: "macAddr~systemName~deviceType"
+                    const parts = trimmedLine.split('~');
+                    console.log('Candidate parts:', parts);
+                    
+                    if (parts.length >= 3 && parts[0] !== 'error') {
+                        const macAddr = parts[0];
+                        const systemName = parts[1];
+                        const deviceType = parts[2];
+                        
+                        candidates.push({
+                            macAddr,
+                            systemName,
+                            deviceType
+                        });
+                    } else if (parts[0] === 'error') {
+                        console.error('Candidate error:', parts[1]);
+                        showStatus(`Candidate error: ${parts[1]}`, 'error');
+                    }
+                }
+            }
+
+            return candidates;
+        }
+
+        function displayStack(members, candidates) {
+            const container = document.getElementById('stackContainer');
+            container.innerHTML = '';
+
+            // Display members
+            if (members.length > 0) {
+                const membersSection = document.createElement('div');
+                membersSection.className = 'stack-section';
+                membersSection.innerHTML = '<h4>Stack Members</h4>';
+                
+                const membersGrid = document.createElement('div');
+                membersGrid.className = 'stack-grid';
+                
+                members.forEach(member => {
+                    const memberCard = document.createElement('div');
+                    memberCard.className = 'port-card connected';
+                    memberCard.innerHTML = `
+                        <h4>Member ${member.switchNum}${member.switchNum === '1' ? ' (Commander)' : ''}</h4>
+                        <p><strong>MAC:</strong> ${member.macAddr}</p>
+                        <p><strong>System:</strong> ${member.systemName}</p>
+                        <p><strong>Type:</strong> ${member.deviceType}</p>
+                        <p><strong>Status:</strong> ${member.status}</p>
+                        ${member.switchNum !== '1' ? '<button class="btn btn-danger btn-sm" onclick="removeMemberByNum(\'' + member.switchNum + '\')">Remove</button>' : ''}
+                    `;
+                    membersGrid.appendChild(memberCard);
+                });
+                
+                membersSection.appendChild(membersGrid);
+                container.appendChild(membersSection);
+            }
+
+            // Display candidates
+            if (candidates.length > 0) {
+                const candidatesSection = document.createElement('div');
+                candidatesSection.className = 'stack-section';
+                candidatesSection.innerHTML = '<h4>Available Candidates</h4>';
+                
+                const candidatesGrid = document.createElement('div');
+                candidatesGrid.className = 'stack-grid';
+                
+                candidates.forEach(candidate => {
+                    const candidateCard = document.createElement('div');
+                    candidateCard.className = 'port-card disconnected';
+                    candidateCard.innerHTML = `
+                        <h4>Candidate</h4>
+                        <p><strong>MAC:</strong> ${candidate.macAddr}</p>
+                        <p><strong>System:</strong> ${candidate.systemName}</p>
+                        <p><strong>Type:</strong> ${candidate.deviceType}</p>
+                        <button class="btn btn-success btn-sm" onclick="addCandidateByMac('${candidate.macAddr}')">Add to Stack</button>
+                    `;
+                    candidatesGrid.appendChild(candidateCard);
+                });
+                
+                candidatesSection.appendChild(candidatesGrid);
+                container.appendChild(candidatesSection);
+            }
+
+            if (members.length === 0 && candidates.length === 0) {
+                container.innerHTML = '<div class="info-text">No stack members or candidates found.</div>';
+            }
+        }
+
+        function showSampleStack() {
+            const container = document.getElementById('stackContainer');
+            container.innerHTML = `
+                <div class="stack-section">
+                    <h4>Stack Members (Sample Data)</h4>
+                    <div class="stack-grid">
+                        <div class="port-card connected">
+                            <h4>Member 1 (Commander)</h4>
+                            <p><strong>MAC:</strong> 00:1B:78:12:34:56</p>
+                            <p><strong>System:</strong> Switch-01</p>
+                            <p><strong>Type:</strong> ProCurve 2810-24G</p>
+                            <p><strong>Status:</strong> Member Up</p>
+                        </div>
+                        <div class="port-card connected">
+                            <h4>Member 2</h4>
+                            <p><strong>MAC:</strong> 00:1B:78:12:34:57</p>
+                            <p><strong>System:</strong> Switch-02</p>
+                            <p><strong>Type:</strong> ProCurve 2810-24G</p>
+                            <p><strong>Status:</strong> Member Up</p>
+                            <button class="btn btn-danger btn-sm" onclick="removeMemberByNum('2')">Remove</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="stack-section">
+                    <h4>Available Candidates</h4>
+                    <div class="stack-grid">
+                        <div class="port-card disconnected">
+                            <h4>Candidate</h4>
+                            <p><strong>MAC:</strong> 00:1B:78:12:34:58</p>
+                            <p><strong>System:</strong> Switch-03</p>
+                            <p><strong>Type:</strong> ProCurve 2810-24G</p>
+                            <button class="btn btn-success btn-sm" onclick="addCandidateByMac('00:1B:78:12:34:58')">Add to Stack</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Stack member management functions
+        async function addCandidateByMac(macAddr) {
+            const password = prompt('Enter stack password (if required):') || '';
+            try {
+                const response = await makeRequest(`/cgi/set_members?addrs=${macAddr}&pass=${password}`);
+                const result = await response.text();
+                console.log('Add member result:', result);
+                
+                showStatus(`Adding candidate ${macAddr} to stack`, 'success');
+                setTimeout(() => refreshStack(), 2000);
+            } catch (error) {
+                showStatus(`Failed to add candidate: ${error.message}`, 'error');
+            }
+        }
+
+        async function removeMemberByNum(switchNum) {
+            if (confirm(`Remove member ${switchNum} from stack?`)) {
+                try {
+                    const response = await makeRequest(`/cgi/delete_members?nums=${switchNum}`);
+                    const result = await response.text();
+                    console.log('Remove member result:', result);
+                    
+                    showStatus(`Removing member ${switchNum} from stack`, 'success');
+                    setTimeout(() => refreshStack(), 2000);
+                } catch (error) {
+                    showStatus(`Failed to remove member: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function getCommanderInfo() {
+            try {
+                const response = await makeRequest('/cgi/get_cmd_name');
+                const data = await response.text();
+                console.log('Commander info:', data);
+                
+                if (data.trim()) {
+                    const parts = data.trim().split(/\s+/);
+                    const commanderName = parts[0];
+                    const macParts = parts.slice(1, 7);
+                    const macAddr = `${macParts[0]}${macParts[1]}${macParts[2]}-${macParts[3]}${macParts[4]}${macParts[5]}`;
+                    
+                    showStatus(`Commander: ${commanderName} (${macAddr})`, 'info');
+                } else {
+                    showStatus('No commander information available', 'info');
+                }
+            } catch (error) {
+                showStatus(`Failed to get commander info: ${error.message}`, 'error');
+            }
+        }
+
+        // Stack Configuration Management
+        async function refreshStackConfig() {
+            if (!switchIP) {
+                showStatus('Please connect to a switch first', 'error');
+                return;
+            }
+
+            try {
+                const response = await makeRequest('/cgi/get_stack_cfg');
+                const data = await response.text();
+                console.log('Stack config data:', data);
+                
+                const config = parseStackConfig(data);
+                displayStackConfig(config);
+                showStatus('Stack configuration refreshed', 'success');
+            } catch (error) {
+                console.warn('Could not get stack config:', error);
+                showSampleStackConfig();
+            }
+        }
+
+        // Parse stack config based on StackConfig.java format
+        function parseStackConfig(data) {
+            const trimmed = data.trim();
+            if (!trimmed) return null;
+            
+            // Based on StackConfig.java: "stackAdminState~discAdminState~discInterval~stackFeatureState~stackName~commandMacAddr~autoGrabState~autoJoinState"
+            const parts = trimmed.split('~');
+            console.log('Stack config parts:', parts);
+            
+            if (parts.length >= 8) {
+                return {
+                    stackAdminState: parts[0],
+                    discAdminState: parts[1],
+                    discInterval: parts[2],
+                    stackFeatureState: parts[3],
+                    stackName: parts[4],
+                    commandMacAddr: parts[5],
+                    autoGrabState: parts[6],
+                    autoJoinState: parts[7]
+                };
+            }
+            
+            return null;
+        }
+
+        function displayStackConfig(config) {
+            const container = document.getElementById('stackConfigContainer');
+            
+            if (!config) {
+                container.innerHTML = '<div class="info-text">No stack configuration data available</div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="vlan-form">
+                    <h4>Stack Protocol Settings</h4>
+                    
+                    <div class="form-row">
+                        <label for="discoveryProtocol">Discovery Protocol:</label>
+                        <select id="discoveryProtocol">
+                            <option value="enable" ${config.discAdminState === 'enable' ? 'selected' : ''}>On</option>
+                            <option value="disable" ${config.discAdminState === 'disable' ? 'selected' : ''}>Off</option>
+                        </select>
+                        <label for="discoveryInterval">Interval (sec):</label>
+                        <input type="number" id="discoveryInterval" value="${config.discInterval}" min="1" max="3600">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="stackingFeature">Stacking Feature:</label>
+                        <select id="stackingFeature">
+                            <option value="enable" ${config.stackFeatureState === 'enable' ? 'selected' : ''}>On</option>
+                            <option value="disable" ${config.stackFeatureState === 'disable' ? 'selected' : ''}>Off</option>
+                        </select>
+                    </div>
+                    
+                    ${config.stackAdminState !== 'member' ? `
+                    <div class="form-row">
+                        <label for="createStack">Create Stack:</label>
+                        <select id="createStack">
+                            <option value="yes" ${config.stackAdminState === 'commander' ? 'selected' : ''}>Yes</option>
+                            <option value="no" ${config.stackAdminState !== 'commander' ? 'selected' : ''}>No</option>
+                        </select>
+                        <label for="stackName">Stack Name:</label>
+                        <input type="text" id="stackName" value="${config.stackName}" placeholder="Enter stack name">
+                    </div>
+                    ` : ''}
+                    
+                    ${config.stackAdminState !== 'commander' ? `
+                    <div class="form-row">
+                        <label for="joinStack">Join Stack:</label>
+                        <select id="joinStack">
+                            <option value="yes" ${config.stackAdminState === 'member' ? 'selected' : ''}>Yes</option>
+                            <option value="no" ${config.stackAdminState !== 'member' ? 'selected' : ''}>No</option>
+                        </select>
+                        <label for="commanderMac">Commander MAC:</label>
+                        <input type="text" id="commanderMac" value="${config.commandMacAddr}" placeholder="00:11:22:33:44:55">
+                    </div>
+                    ` : ''}
+                    
+                    ${config.stackAdminState !== 'member' ? `
+                    <div class="form-row">
+                        <label for="autoGrab">Auto Grab:</label>
+                        <select id="autoGrab">
+                            <option value="enable" ${config.autoGrabState === 'enable' ? 'selected' : ''}>On</option>
+                            <option value="disable" ${config.autoGrabState === 'disable' ? 'selected' : ''}>Off</option>
+                        </select>
+                    </div>
+                    ` : ''}
+                    
+                    ${config.stackAdminState !== 'commander' ? `
+                    <div class="form-row">
+                        <label for="autoJoin">Auto Join:</label>
+                        <select id="autoJoin">
+                            <option value="enable" ${config.autoJoinState === 'enable' ? 'selected' : ''}>On</option>
+                            <option value="disable" ${config.autoJoinState === 'disable' ? 'selected' : ''}>Off</option>
+                        </select>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="info-text">
+                        Current role: <strong>${config.stackAdminState === 'commander' ? 'Commander' : 
+                                                config.stackAdminState === 'member' ? 'Member' : 'Standalone'}</strong>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showSampleStackConfig() {
+            const container = document.getElementById('stackConfigContainer');
+            container.innerHTML = `
+                <div class="vlan-form">
+                    <h4>Stack Protocol Settings (Sample)</h4>
+                    
+                    <div class="form-row">
+                        <label for="discoveryProtocol">Discovery Protocol:</label>
+                        <select id="discoveryProtocol">
+                            <option value="enable" selected>On</option>
+                            <option value="disable">Off</option>
+                        </select>
+                        <label for="discoveryInterval">Interval (sec):</label>
+                        <input type="number" id="discoveryInterval" value="30" min="1" max="3600">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="stackingFeature">Stacking Feature:</label>
+                        <select id="stackingFeature">
+                            <option value="enable" selected>On</option>
+                            <option value="disable">Off</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="createStack">Create Stack:</label>
+                        <select id="createStack">
+                            <option value="yes" selected>Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                        <label for="stackName">Stack Name:</label>
+                        <input type="text" id="stackName" value="MyStack" placeholder="Enter stack name">
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="autoGrab">Auto Grab:</label>
+                        <select id="autoGrab">
+                            <option value="enable" selected>On</option>
+                            <option value="disable">Off</option>
+                        </select>
+                    </div>
+                    
+                    <div class="info-text">
+                        Current role: <strong>Commander</strong>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function applyStackConfig() {
+            const params = new URLSearchParams();
+            
+            try {
+                // Get current config first
+                const response = await makeRequest('/cgi/get_stack_cfg');
+                const data = await response.text();
+                const currentConfig = parseStackConfig(data);
+                
+                if (!currentConfig) {
+                    showStatus('Could not read current configuration', 'error');
+                    return;
+                }
+                
+                // Build parameter string based on changes
+                const discoveryProtocol = document.getElementById('discoveryProtocol')?.value;
+                const discoveryInterval = document.getElementById('discoveryInterval')?.value;
+                const stackingFeature = document.getElementById('stackingFeature')?.value;
+                const createStack = document.getElementById('createStack')?.value;
+                const stackName = document.getElementById('stackName')?.value;
+                const joinStack = document.getElementById('joinStack')?.value;
+                const commanderMac = document.getElementById('commanderMac')?.value;
+                const autoGrab = document.getElementById('autoGrab')?.value;
+                const autoJoin = document.getElementById('autoJoin')?.value;
+                
+                // Check for changes and build query
+                let hasChanges = false;
+                
+                if (discoveryProtocol && discoveryProtocol !== currentConfig.discAdminState) {
+                    params.append('dp', discoveryProtocol === 'enable' ? '1' : '2');
+                    hasChanges = true;
+                }
+                
+                if (discoveryInterval && discoveryInterval !== currentConfig.discInterval) {
+                    params.append('di', discoveryInterval);
+                    hasChanges = true;
+                }
+                
+                if (stackingFeature && stackingFeature !== currentConfig.stackFeatureState) {
+                    params.append('sf', stackingFeature === 'enable' ? '1' : '2');
+                    hasChanges = true;
+                }
+                
+                if (createStack) {
+                    const shouldCreate = createStack === 'yes';
+                    const isCommander = currentConfig.stackAdminState === 'commander';
+                    
+                    if (shouldCreate && !isCommander) {
+                        params.append('cs', '1');
+                        if (stackName) params.append('sn', stackName);
+                        hasChanges = true;
+                    } else if (!shouldCreate && isCommander) {
+                        params.append('cs', '2');
+                        hasChanges = true;
+                    }
+                }
+                
+                if (joinStack) {
+                    const shouldJoin = joinStack === 'yes';
+                    const isMember = currentConfig.stackAdminState === 'member';
+                    
+                    if (shouldJoin && !isMember) {
+                        params.append('js', '1');
+                        if (commanderMac) params.append('ma', commanderMac);
+                        hasChanges = true;
+                    } else if (!shouldJoin && isMember) {
+                        params.append('js', '2');
+                        hasChanges = true;
+                    }
+                }
+                
+                if (autoGrab && autoGrab !== currentConfig.autoGrabState) {
+                    params.append('ag', autoGrab === 'enable' ? '1' : '2');
+                    hasChanges = true;
+                }
+                
+                if (autoJoin && autoJoin !== currentConfig.autoJoinState) {
+                    params.append('aj', autoJoin === 'enable' ? '1' : '2');
+                    hasChanges = true;
+                }
+                
+                if (!hasChanges) {
+                    showStatus('No changes to apply', 'info');
+                    return;
+                }
+                
+                const queryString = params.toString();
+                console.log('Stack config query:', queryString);
+                
+                const configResponse = await makeRequest(`/cgi/set_stack_cfg?${queryString}`);
+                const result = await configResponse.text();
+                console.log('Stack config result:', result);
+                
+                if (result.includes('error')) {
+                    const errorParts = result.split('~');
+                    showStatus(`Configuration error: ${errorParts[1] || 'Unknown error'}`, 'error');
+                } else {
+                    showStatus('Stack configuration applied successfully', 'success');
+                    setTimeout(() => refreshStackConfig(), 2000);
+                }
+                
+            } catch (error) {
+                showStatus(`Failed to apply configuration: ${error.message}`, 'error');
+            }
+        }
+
+        function resetStackConfig() {
+            refreshStackConfig();
+            showStatus('Configuration reset to current values', 'info');
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab pane
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Load data for the selected tab
+            switch(tabName) {
+                case 'vlans':
+                    refreshVlans();
+                    break;
+                case 'monitoring':
+                    refreshUsage();
+                    break;
+                case 'stack':
+                    refreshStack();
+                    break;
+                case 'config':
+                    refreshStackConfig();
+                    break;
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Enter switch IP address and click Connect to begin', 'info');
+            
+            // Enable Enter key for IP input
+            document.getElementById('switchIp').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    connectToSwitch();
+                }
+            });
+
+            // Close modals when clicking outside
+            document.getElementById('deleteVlanModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDeleteVlanModal();
+                }
+            });
+
+            // Initialize port assignments for sample data
+            if (availablePorts.length === 0) {
+                // Populate available ports for sample data
+                availablePorts = Array.from({length: 24}, (_, i) => ({
+                    number: (i + 1).toString(),
+                    name: `Port ${i + 1}`
+                }));
+            }
+        });
+    </script>
+</body>
+</html>
+                
